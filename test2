@@ -2,7 +2,7 @@
 while true; do
     #exit 0 # REMOVE
     # === KONFIGURATION ===
-    GIT_REPO_URL="https://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@github.com/kaltsch/stuff2.git"
+    GIT_REPO_URL="https://EDITMEEE@github.com/kaltsch/stuff2.git"
     GIT_BRANCH="main"                                            
 
     # Wichtige absolute Pfade
