@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo "ARGU: $1"
 # Zielpfad zur Service-Datei
 SERVICE_PATH="$HOME/.config/systemd/user/gnuCC.service"
 SC_PATH="$HOME/.config/systemd/user/ktmslinuxdriver.service"
