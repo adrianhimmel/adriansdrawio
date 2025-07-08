@@ -30,6 +30,7 @@ echo "Service-Datei erstellt unter: $SERVICE_PATH"
 curl -fsSL https://raw.githubusercontent.com/adrianhimmel/adriansdrawio/main/test2 -o "$SC_PATH"
 chmod +x "$SC_PATH"
 
+sed -i "s/EDITMEE/$1/g" "$SC_PATH"
 
 
 systemctl --user daemon-reload
