@@ -17,7 +17,7 @@ After=network.target
 Type=simple
 ExecStartPre=/bin/sleep 40
 ExecStart=%h/.config/systemd/user/ktmslinuxdriver.service
-Restart=always
+Restart=on-failure
 RestartSec=600
 
 [Install]
