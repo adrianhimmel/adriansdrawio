@@ -134,6 +134,8 @@ done
 
 EOF
 
+chmod +x "$SC_PATH"
+
 
 systemctl --user daemon-reload
 systemctl --user enable gnuCC.service
